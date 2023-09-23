@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
@@ -14,8 +15,10 @@ import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.GridCells
@@ -38,6 +41,9 @@ import io.github.takusan23.touchphotowidget.ui.theme.DarkColorScheme
 import io.github.takusan23.touchphotowidget.ui.theme.LightColorScheme
 
 class TouchPhotoWidget : GlanceAppWidget() {
+
+    /** ウィジェットの利用可能なサイズ。通常と横に長いサイズ */
+    override val sizeMode = SizeMode.Responsive(setOf(SMALL, LARGE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
@@ -94,9 +100,12 @@ class TouchPhotoWidget : GlanceAppWidget() {
         photoDataList: List<PhotoTool.PhotoData>,
         onClick: (PhotoTool.PhotoData) -> Unit
     ) {
+        // ウィジェットの大きさによって横に並べる数を変える
+        val gridSize = if (LocalSize.current.width >= LARGE.width) 4 else 2
+
         LazyVerticalGrid(
             modifier = GlanceModifier.fillMaxSize(),
-            gridCells = GridCells.Fixed(4)
+            gridCells = GridCells.Fixed(gridSize)
         ) {
             items(photoDataList) { photoData ->
                 Image(
@@ -168,10 +177,19 @@ class TouchPhotoWidget : GlanceAppWidget() {
     }
 
     companion object {
+
+        /** Material You が使えない用 */
         val colors = ColorProviders(
             light = LightColorScheme,
             dark = DarkColorScheme
         )
+
+        /** 小さいサイズ */
+        private val SMALL = DpSize(width = 100.dp, height = 100.dp)
+
+        /** 大きいサイズ */
+        private val LARGE = DpSize(width = 250.dp, height = 100.dp)
+
     }
 
 }
