@@ -2,20 +2,22 @@ package io.github.takusan23.touchphotowidget
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.glance.Button
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.GlanceTheme
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.actionStartActivity
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.GridCells
 import androidx.glance.appwidget.lazy.LazyVerticalGrid
 import androidx.glance.appwidget.lazy.items
@@ -30,6 +32,10 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.material3.ColorProviders
+import io.github.takusan23.touchphotowidget.ui.theme.DarkColorScheme
+import io.github.takusan23.touchphotowidget.ui.theme.LightColorScheme
 
 class TouchPhotoWidget : GlanceAppWidget() {
 
@@ -46,23 +52,32 @@ class TouchPhotoWidget : GlanceAppWidget() {
                 bitmapList.value = PhotoTool.getLatestPhotoBitmap(context, limit = 10) // TODO 戻す
             }
 
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .background(Color.White)
-            ) {
-                if (selectPhoto.value != null) {
-                    // 選択した画像がある
-                    PhotoDetail(
-                        photoData = selectPhoto.value!!,
-                        onBack = { selectPhoto.value = null }
-                    )
+            // テーマ機能
+            GlanceTheme(
+                colors = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    GlanceTheme.colors
                 } else {
-                    // 一覧表示
-                    PhotoGridList(
-                        photoDataList = bitmapList.value,
-                        onClick = { bitmap -> selectPhoto.value = bitmap }
-                    )
+                    colors
+                }
+            ) {
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxSize()
+                        .background(GlanceTheme.colors.secondaryContainer)
+                ) {
+                    if (selectPhoto.value != null) {
+                        // 選択した画像がある
+                        PhotoDetail(
+                            photoData = selectPhoto.value!!,
+                            onBack = { selectPhoto.value = null }
+                        )
+                    } else {
+                        // 一覧表示
+                        PhotoGridList(
+                            photoDataList = bitmapList.value,
+                            onClick = { bitmap -> selectPhoto.value = bitmap }
+                        )
+                    }
                 }
             }
         }
@@ -118,16 +133,30 @@ class TouchPhotoWidget : GlanceAppWidget() {
                     .fillMaxWidth()
                     .padding(5.dp)
             ) {
-                Button(
-                    modifier = GlanceModifier.padding(10.dp),
-                    text = "戻る",
-                    onClick = onBack
+                // 戻るボタン
+                Image(
+                    modifier = GlanceModifier
+                        .size(40.dp)
+                        .padding(5.dp)
+                        .cornerRadius(10.dp)
+                        .clickable(onBack),
+                    provider = ImageProvider(resId = R.drawable.outline_arrow_back_24),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.primary)
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
-                Button(
-                    modifier = GlanceModifier.padding(10.dp),
-                    text = "開く",
-                    onClick = actionStartActivity(intent)
+                // アプリを開く
+                // 塗りつぶし
+                Image(
+                    modifier = GlanceModifier
+                        .size(40.dp)
+                        .padding(5.dp)
+                        .background(GlanceTheme.colors.primary)
+                        .cornerRadius(10.dp)
+                        .clickable(actionStartActivity(intent)),
+                    provider = ImageProvider(resId = R.drawable.outline_open_in_new_24),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(GlanceTheme.colors.primaryContainer)
                 )
             }
             Image(
@@ -136,6 +165,13 @@ class TouchPhotoWidget : GlanceAppWidget() {
                 contentDescription = null
             )
         }
+    }
+
+    companion object {
+        val colors = ColorProviders(
+            light = LightColorScheme,
+            dark = DarkColorScheme
+        )
     }
 
 }
